@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome to Omkar's Chatbot</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 2.5em;
+    font-weight: bold;
+    margin: 20px 0;
+    letter-spacing: 1px;
+  }
+
+  #chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin: 0 10px;
+    padding: 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 20px;
+    overflow-y: auto;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+    backdrop-filter: blur(15px);
+  }
+
+  .message {
+    max-width: 75%;
+    padding: 12px 18px;
+    margin: 8px 0;
+    border-radius: 20px;
+    word-wrap: break-word;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: slideIn 0.4s forwards;
+  }
+
+  .user { 
+    background: linear-gradient(135deg, #ff4d6d, #ff7a8f);
+    align-self: flex-end;
+  }
+  .bot { 
+    background: linear-gradient(135deg, #4d94ff, #6fb1ff);
+    align-self: flex-start;
+  }
+
+  @keyframes slideIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  #input-container {
+    display: flex;
+    padding: 12px;
+    gap: 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 20px;
+    margin: 10px;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
+  }
+
+  #message-input {
+    flex: 1;
+    padding: 12px;
+    border-radius: 20px;
+    border: none;
+    outline: none;
+    font-size: 1em;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+  }
+
+  #send-btn {
+    padding: 12px 22px;
+    border-radius: 20px;
+    border: none;
+    background: #ff4d6d;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  #send-btn:hover {
+    background: #ff1a3c;
+  }
+
+  /* Typing animation */
+  .typing span {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin: 0 2px;
+    background: #fff;
+    border-radius: 50%;
+    animation: bounce 0.6s infinite alternate;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-8px); }
+  }
+</style>
+</head>
+<body>
+<h1>Welcome to Omkar's Chatbot</h1>
+
+<div id="chat-container"></div>
+
+<div id="input-container">
+  <input type="text" id="message-input" placeholder="Type your message..." />
+  <button id="send-btn">Send</button>
+</div>
+
+<script>
+const chatContainer = document.getElementById("chat-container");
+const input = document.getElementById("message-input");
+const sendBtn = document.getElementById("send-btn");
+
+// Your Replit backend URL with /chat
+const BACKEND_URL = "https://98b30ab0-b99b-4268-8db1-8de6d0d1efc8-00-3b598uic6j6qi.picard.replit.dev/chat";
+
+function appendMessage(text, sender, typing=false) {
+  const msg = document.createElement("div");
+  msg.classList.add("message", sender);
+  if (typing) {
+    const dots = document.createElement("span");
+    dots.classList.add("typing");
+    dots.innerHTML = '<span></span><span></span><span></span>';
+    msg.appendChild(dots);
+  } else {
+    msg.textContent = text;
+  }
+  chatContainer.appendChild(msg);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+  return msg;
+}
+
+async function sendMessage() {
+  const message = input.value.trim();
+  if (!message) return;
+
+  appendMessage(message, "user");
+  input.value = "";
+
+  const botPlaceholder = appendMessage("", "bot", true);
+
+  try {
+    const res = await fetch(BACKEND_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message })
+    });
+    const data = await res.json();
+    botPlaceholder.innerHTML = data.bot || "❌ No response from AI";
+  } catch (err) {
+    botPlaceholder.innerHTML = "❌ Error contacting backend";
+    console.error(err);
+  }
+}
+
+sendBtn.addEventListener("click", sendMessage);
+input.addEventListener("keypress", e => {
+  if (e.key === "Enter") sendMessage();
+});
+</script>
+</body>
+</html>
